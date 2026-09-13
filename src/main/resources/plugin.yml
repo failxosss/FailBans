@@ -2,8 +2,8 @@ name: FailBan
 version: '1.0.0'
 main: cz.failban.plugin.FailBan
 api-version: '1.21'
-author: FailBan
-description: Complete punishment system - ban, mute, warn, alt/IP detection.
+author: Failxos
+description: Punishment system - ban, mute, warn, alt/IP detection.
 
 commands:
   ban:
