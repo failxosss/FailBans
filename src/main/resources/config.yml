@@ -50,8 +50,8 @@ kick-screen:
     &7Unban in &7» &c{time_left}
     
     &7Unban application in TS or forum
-    &e&nTS-Ip &7» &ecoming soon
     &e&nForum &7» &ecoming soon
+    &e&nDiscord &7» &ecoming soon
     &7&m                                        
   kick: |
     &7&m                                        
