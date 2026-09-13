@@ -1,0 +1,117 @@
+name: FailBan
+version: '1.0.0'
+main: cz.failban.plugin.FailBan
+api-version: '1.21'
+author: FailBan
+description: Complete punishment system - ban, mute, warn, alt/IP detection.
+
+commands:
+  ban:
+    description: Permanently bans a player
+    usage: /ban <player> <reason>
+    permission: failban.ban
+  tempban:
+    description: Temporarily bans a player
+    usage: /tempban <player> <time> <reason>
+    permission: failban.tempban
+  unban:
+    description: Unbans a player
+    usage: /unban <player> [reason]
+    permission: failban.unban
+  kick:
+    description: Kicks a player from the server
+    usage: /kick <player> <reason>
+    permission: failban.kick
+  mute:
+    description: Permanently mutes a player
+    usage: /mute <player> <reason>
+    permission: failban.mute
+  tempmute:
+    description: Temporarily mutes a player
+    usage: /tempmute <player> <time> <reason>
+    permission: failban.tempmute
+  unmute:
+    description: Unmutes a player
+    usage: /unmute <player> [reason]
+    permission: failban.unmute
+  warn:
+    description: Permanently warns a player
+    usage: /warn <player> <reason>
+    permission: failban.warn
+  tempwarn:
+    description: Temporarily warns a player
+    usage: /tempwarn <player> <time> <reason>
+    permission: failban.warn
+  unwarn:
+    description: Removes a warning from a player
+    usage: /unwarn <player> [reason]
+    permission: failban.warn
+  history:
+    description: Shows a player's punishment history
+    usage: /history <player>
+    permission: failban.history
+  check:
+    description: Shows a player's currently active punishments
+    usage: /check <player>
+    permission: failban.check
+  banlist:
+    description: Shows the list of active bans
+    usage: /banlist [page]
+    permission: failban.banlist
+  unpunish:
+    description: Removes any punishment by ID
+    usage: /unpunish <id> [reason]
+    permission: failban.unpunish
+  change-reason:
+    description: Changes the reason of a punishment by ID
+    usage: /change-reason <id> <new reason>
+    permission: failban.changereason
+  failcheck:
+    description: Shows alt accounts, IP and punishment overview for a player
+    usage: /failcheck <player>
+    permission: failban.failcheck
+  failban:
+    description: Main command for the FailBan plugin
+    usage: /failban <reload|help>
+    permission: failban.admin
+
+permissions:
+  failban.*:
+    description: All FailBan permissions
+    children:
+      failban.ban: true
+      failban.tempban: true
+      failban.unban: true
+      failban.kick: true
+      failban.mute: true
+      failban.tempmute: true
+      failban.unmute: true
+      failban.warn: true
+      failban.history: true
+      failban.check: true
+      failban.banlist: true
+      failban.unpunish: true
+      failban.changereason: true
+      failban.failcheck: true
+      failban.admin: true
+      failban.bypass.ban: true
+      failban.bypass.mute: true
+      failban.notify: true
+  failban.ban: {default: op}
+  failban.tempban: {default: op}
+  failban.unban: {default: op}
+  failban.kick: {default: op}
+  failban.mute: {default: op}
+  failban.tempmute: {default: op}
+  failban.unmute: {default: op}
+  failban.warn: {default: op}
+  failban.history: {default: op}
+  failban.check: {default: op}
+  failban.banlist: {default: op}
+  failban.unpunish: {default: op}
+  failban.changereason: {default: op}
+  failban.failcheck: {default: op}
+  failban.admin: {default: op}
+  failban.bypass.ban: {default: false}
+  failban.bypass.mute: {default: false}
+  failban.notify: {default: op}

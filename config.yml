@@ -1,0 +1,75 @@
+# =========================================
+#              FailBan Config
+# =========================================
+
+storage:
+  # sqlite is built-in, no extra setup needed
+  type: sqlite
+  file: database.db
+
+prefix: "&8[&cFail&4Ban&8] &r"
+
+# Placeholders: {player} {reason} {staff} {time_left} {type} {id} {date}
+messages:
+  no-permission: "&cYou don't have permission to use this command."
+  player-not-found: "&cPlayer &e{player} &cwas not found (they must have joined at least once)."
+  invalid-usage: "&cInvalid usage: &e{usage}"
+  invalid-time: "&cInvalid time format. Example: 10s, 30m, 2h, 7d, 1mo, perm"
+  already-banned: "&cPlayer &e{player} &cis already banned."
+  not-banned: "&cPlayer &e{player} &cis not banned."
+  already-muted: "&cPlayer &e{player} &cis already muted."
+  not-muted: "&cPlayer &e{player} &cis not muted."
+  banned-by-staff: "&aPlayer &e{player} &awas banned by &e{staff} &a({reason})"
+  tempbanned-by-staff: "&aPlayer &e{player} &awas temporarily banned by &e{staff} &afor {time_left} &a({reason})"
+  unbanned-by-staff: "&aPlayer &e{player} &awas unbanned by &e{staff}"
+  kicked-by-staff: "&aPlayer &e{player} &awas kicked by &e{staff} &a({reason})"
+  muted-by-staff: "&aPlayer &e{player} &awas muted by &e{staff} &a({reason})"
+  tempmuted-by-staff: "&aPlayer &e{player} &awas temporarily muted by &e{staff} &afor {time_left} &a({reason})"
+  unmuted-by-staff: "&aPlayer &e{player} &awas unmuted by &e{staff}"
+  warned-by-staff: "&aPlayer &e{player} &areceived a warning from &e{staff} &a({reason})"
+  unwarned-by-staff: "&aWarning for &e{player} &awas removed by &e{staff}"
+  unpunish-success: "&aPunishment &e#{id} &awas removed by &e{staff}"
+  unpunish-not-found: "&cPunishment with ID &e{id} &cwas not found or is no longer active."
+  change-reason-success: "&aReason for punishment &e#{id} &awas changed to: &e{reason}"
+  change-reason-not-found: "&cPunishment with ID &e{id} &cwas not found."
+  is-muted-chat: "&cYou are muted. Reason: &e{reason} &c| Time left: &e{time_left}"
+  reload-success: "&aFailBan configuration has been reloaded."
+  warn-notify-target: "&cYou received a warning: &e{reason}"
+
+# "Connection Lost" screen shown on ban/kick
+# & is a color code
+kick-screen:
+  ban: |
+    &7&m                                        
+    
+    &c&lConnection Lost
+    
+    &c&lFailBan &7» &cBanned for {reason}
+    &7Banned by &c{staff}
+    
+    &7Unban in &7» &c{time_left}
+    
+    &7Unban application in TS or forum
+    &e&nTS-Ip &7» &ecoming soon
+    &e&nForum &7» &ecoming soon
+    &7&m                                        
+  kick: |
+    &7&m                                        
+    
+    &c&lConnection Lost
+    
+    &c&lFailBan &7» &cKicked
+    &7Reason: &c{reason}
+    &7Kicked by &c{staff}
+    &7&m                                        
+
+# Format used for /banlist and /history
+history-format: "&8#{id} &7[{type}] &e{player} &7- &f{reason} &7(by &e{staff}&7, {date})"
+
+# Logs every punishment to Discord via webhook
+discord:
+  enabled: false
+  # Create a webhook in Discord: Channel Settings -> Integrations -> Webhooks -> New Webhook -> copy URL
+  webhook-url: ""
+  username: "FailBan"
+  avatar-url: ""
