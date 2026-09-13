@@ -331,7 +331,7 @@ TabCompleter {
             return;
         }
         String reason = args.length > 1 ? String.join((CharSequence)" ", Arrays.copyOfRange(args, 1, args.length)) : "Removed";
-        List actives = this.plugin.getPunishmentManager().getActivePunishments(target.uuid).stream().filter(p -> p.getType().isWarnType()).collect(Collectors.toList());
+        List<Punishment> actives = this.plugin.getPunishmentManager().getActivePunishments(target.uuid).stream().filter(p -> p.getType().isWarnType()).collect(Collectors.toList());
         if (actives.isEmpty()) {
             this.msg(sender, "not-muted", Map.of("player", target.name));
             return;
