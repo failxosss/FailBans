@@ -1,0 +1,128 @@
+storage:
+  autosave-seconds: 300
+
+records:
+  expire-minutes: 60
+  min-violations: 1
+  notify-staff: true
+
+reason-map-default: CHEATING
+reason-map:
+  "xray|orebfuscator|cave|basefind|nuker": FINDING_BASES
+  "reach|killaura|aim|autoclicker|hitbox|angle|rotation": KILLAURA
+  "fly|jesus|speed|motion|nofall|elytra|velocity|knockback|timer": MOVEMENT
+  "scaffold|tower|fastplace|fastbreak|nuke": WORLD
+  "badpackets|packet|exploit|crash|invalid|post": EXPLOIT
+  "autototem|inventory|chestsealer|autoshield": INVENTORY
+  "simulation|prediction|groundspoof|phase": MOVEMENT
+
+gui:
+  title: "&8{page}/{pages} sus &8#&f{total}"
+  status-online: "&aONLINE"
+  status-offline: "&cOFFLINE"
+  buttons:
+    filter-material: ENDER_EYE
+    refresh-material: CLOCK
+    sort-material: COMPARATOR
+  head:
+    name: "&e&l{player}"
+    lore:
+      - "&8DESCRIPTION"
+      - ""
+      - "&dFlags: &f{reason}"
+      - "&dTotal flags: &f{flags}"
+      - "&dLast flag: &f{last_flag}"
+      - ""
+      - "&7Anticheat: &b{anticheat} &8| &7VL: &c{vl}"
+      - "&7Checks: &f{checks}"
+      - "&7Status: {status}"
+      - "&7World: &f{world} &8(&f{x} {y} {z}&8)"
+      - ""
+      - "&d&l\u25B6 LEFT-CLICK TO SPECTATE"
+      - "&d&l\u25B6 RIGHT-CLICK TO REMOVE"
+      - "&d&l\u25B6 SHIFT+LEFT FOR /failcheck"
+
+spectate:
+  vanish: true
+  night-vision: true
+  lock-camera: false
+  restore-on-join: true
+  stop-when-target-leaves: false
+
+integration:
+  shift-left-command: "failcheck {player}"
+
+messages:
+  no-permission: "&cYou don't have permission for that."
+  player-not-found: "&cPlayer &e{player} &cwas not found."
+  no-record: "&cNo sus record found for &e{player}&c."
+  no-records: "&7Nobody is suspicious right now."
+  record-added: "&aAdded &e{player} &ato /sus &7({reason})"
+  record-removed: "&aRecord of &e{player} &awas removed."
+  records-cleared: "&aCleared &e{amount} &asus records."
+  new-sus: "&8[&dSUS&8] &f{player} &7was added to /sus &8(&d{reason} &7by &b{anticheat}&8, vl &c{vl}&8)"
+  spectate-start: "&8[&dSUS&8] &7You are now spectating &f{player}&7. Type &f/sus back &7to return."
+  spectate-stop: "&8[&dSUS&8] &7You are back at your previous location."
+  spectate-restored: "&8[&dSUS&8] &7Your spectator session was restored after a restart."
+  not-spectating: "&cYou are not spectating anyone."
+  target-offline: "&e{player} &cis not online right now."
+  target-left: "&8[&dSUS&8] &e{player} &7has left the server."
+  reloaded: "&aSus configuration reloaded."
+
+anticheat-hooks:
+  grim:
+    enabled: true
+    display-name: "GrimAC"
+    event: "ac.grim.grimac.api.events.FlagEvent"
+    player: ["getPlayer", "getUser"]
+    check: ["getCheckName", "getCheck"]
+    violations: ["getViolations", "getVl", "getViolationLevel"]
+    min-violations: 0
+  grim-punish:
+    enabled: true
+    display-name: "GrimAC"
+    event: "ac.grim.grimac.api.events.PunishmentEvent"
+    player: ["getPlayer", "getUser"]
+    check: ["getCheckName", "getCheck"]
+    violations: ["getViolations", "getVl"]
+    min-violations: 0
+  vulcan:
+    enabled: true
+    display-name: "Vulcan"
+    event: "me.frep.vulcan.api.event.VulcanFlagEvent"
+    player: ["getPlayer"]
+    check: ["getCheck", "getCheckName"]
+    violations: ["getVl", "getViolations"]
+    min-violations: 0
+  matrix:
+    enabled: true
+    display-name: "Matrix"
+    event: "me.rerere.matrix.api.events.PlayerViolationEvent"
+    player: ["getPlayer"]
+    check: ["getHackType", "getCheckName"]
+    violations: ["getViolations", "getViolationLevel"]
+    min-violations: 0
+  spartan:
+    enabled: true
+    display-name: "Spartan"
+    event: "me.vagdedes.spartan.api.PlayerViolationEvent"
+    player: ["getPlayer"]
+    check: ["getHackType", "getCheck"]
+    violations: ["getViolationLevel", "getViolations"]
+    min-violations: 0
+  themis:
+    enabled: true
+    display-name: "Themis"
+    event: "me.wolf2323.themis.api.event.ThemisFlagEvent"
+    player: ["getPlayer"]
+    check: ["getCheck", "getCheckName"]
+    violations: ["getViolations", "getVl"]
+    min-violations: 0
+  negativity:
+    enabled: true
+    display-name: "Negativity"
+    event: "com.elikill58.negativity.api.events.player.PlayerCheatEvent"
+    player: ["getPlayer"]
+    check: ["getCheat", "getCheatName"]
+    violations: ["getReliability", "getViolations"]
+    min-violations: 0
