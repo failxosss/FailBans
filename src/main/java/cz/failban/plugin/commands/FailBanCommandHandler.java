@@ -136,9 +136,21 @@ TabCompleter {
 
         if (!temp && args.length == 2) {
             QuickReason preset = this.getQuickReason(args[1]);
-            if (preset != null && preset.type.equals("BAN")) {
-                this.applyQuickBan(sender, args[0], preset);
-                return;
+            if (preset != null) {
+                switch (preset.type) {
+                    case "WARN": {
+                        this.applyQuickWarn(sender, args[0], preset);
+                        return;
+                    }
+                    case "KICK": {
+                        this.applyQuickKick(sender, args[0], preset);
+                        return;
+                    }
+                    default: {
+                        this.applyQuickBan(sender, args[0], preset);
+                        return;
+                    }
+                }
             }
         }
 
@@ -186,6 +198,13 @@ TabCompleter {
     }
 
     private void handleKick(CommandSender sender, String[] args) {
+        if (args.length == 2) {
+            QuickReason preset = this.getQuickReason(args[1]);
+            if (preset != null && preset.type.equals("KICK")) {
+                this.applyQuickKick(sender, args[0], preset);
+                return;
+            }
+        }
         if (args.length < 2) {
             this.msg(sender, "invalid-usage", Map.of("usage", "/kick <player> <reason>"));
             return;
@@ -251,6 +270,15 @@ TabCompleter {
 
     private void handleWarn(CommandSender sender, String[] args, boolean temp) {
         String reason;
+
+        if (!temp && args.length == 2) {
+            QuickReason preset = this.getQuickReason(args[1]);
+            if (preset != null && preset.type.equals("WARN")) {
+                this.applyQuickWarn(sender, args[0], preset);
+                return;
+            }
+        }
+
         int minArgs = temp ? 3 : 2;
         int n = minArgs;
         if (args.length < minArgs) {
