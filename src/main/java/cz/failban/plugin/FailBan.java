@@ -6,6 +6,7 @@ import cz.failban.plugin.listeners.ChatListener;
 import cz.failban.plugin.listeners.PlayerConnectionListener;
 import cz.failban.plugin.manager.PlayerDataManager;
 import cz.failban.plugin.manager.PunishmentManager;
+import cz.failban.plugin.sus.SusModule; // <-- NOVÉ
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class FailBan extends JavaPlugin {
@@ -50,10 +51,14 @@ public class FailBan extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ChatListener(this), this);
 
         getLogger().info("FailBan has been successfully loaded! (version " + getDescription().getVersion() + ")");
+
+        SusModule.enable(this); // <-- NOVÉ
     }
 
     @Override
     public void onDisable() {
+        SusModule.disable(); // <-- NOVÉ
+
         if (databaseManager != null) databaseManager.close();
         getLogger().info("FailBan has been disabled.");
     }
