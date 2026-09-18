@@ -74,6 +74,10 @@ commands:
     description: Shows alt accounts for a player (shortcut for /failcheck)
     usage: /alts <player>
     permission: failban.alts
+  punish:
+    description: Applies a punishment (WARN/KICK/BAN) based on a quick-reasons preset
+    usage: /punish <player> <key>
+    permission: failban.punish
   failban:
     description: Main command for the FailBan plugin
     usage: /failban <reload|help>
@@ -106,6 +110,7 @@ permissions:
       failban.changereason: true
       failban.failcheck: true
       failban.alts: true
+      failban.punish: true
       failban.admin: true
       failban.bypass.ban: true
       failban.bypass.mute: true
@@ -129,6 +134,7 @@ permissions:
   failban.changereason: {default: op}
   failban.failcheck: {default: op}
   failban.alts: {default: op}
+  failban.punish: {default: op}
   failban.admin: {default: op}
   failban.bypass.ban: {default: false}
   failban.bypass.mute: {default: false}
