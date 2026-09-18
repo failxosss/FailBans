@@ -702,7 +702,10 @@ TabCompleter {
 
     private void kickWithScreen(Player online, String path, String reason, String staff, String timeLeft) {
         String template = this.plugin.getConfig().getString(path, "&cByl jsi vyhozen.");
-        template = template.replace("{reason}", reason == null ? "" : reason).replace("{staff}", staff == null ? "" : staff).replace("{time_left}", timeLeft == null ? "" : timeLeft);
+        template = template.replace("{reason}", reason == null ? "" : reason)
+                .replace("{staff}", staff == null ? "" : staff)
+                .replace("{time_left}", timeLeft == null ? "" : timeLeft)
+                .replace("{date}", MessageUtil.formatDate(System.currentTimeMillis()));
         Component component = MessageUtil.toComponent(MessageUtil.color(template));
         online.kick(component);
     }
