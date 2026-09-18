@@ -11,6 +11,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -36,6 +38,9 @@ public class PlayerConnectionListener implements Listener {
         placeholders.put("reason", ban.getReason());
         placeholders.put("staff", ban.getStaff());
         placeholders.put("time_left", ban.isPermanent() ? "permanent" : TimeUtil.formatDuration(ban.getRemainingMillis()));
+        placeholders.put("date", new SimpleDateFormat("yyyy-MM-dd").format(new Date(ban.getCreatedAt())));
+        placeholders.put("type", ban.getType().name());
+        placeholders.put("id", String.valueOf(ban.getId()));
 
         String text = template;
         for (Map.Entry<String, String> e : placeholders.entrySet()) {
