@@ -125,6 +125,10 @@ TabCompleter {
                 this.handleAlts(sender, args);
                 break;
             }
+            case "punish": {
+                this.handlePunish(sender, args);
+                break;
+            }
             default: {
                 return false;
             }
@@ -145,7 +149,7 @@ TabCompleter {
 
         if (!temp && args.length == 2) {
             QuickReason preset = this.getQuickReason(args[1]);
-            if (preset != null) {
+            if (preset != null && preset.type.equals("BAN")) {
                 this.applyQuickBan(sender, args[0], preset);
                 return;
             }
@@ -558,12 +562,73 @@ TabCompleter {
         if (reason == null) {
             return null;
         }
+        String type = this.plugin.getConfig().getString(base + ".type", "BAN").toUpperCase();
         String timeStr = this.plugin.getConfig().getString(base + ".time", "perm");
         long duration = timeStr.equalsIgnoreCase("perm") ? -1L : TimeUtil.parseDuration(timeStr);
         if (duration == -2L) {
             duration = -1L;
         }
-        return new QuickReason(reason, duration);
+        return new QuickReason(reason, type, duration);
+    }
+
+    private void handlePunish(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            this.msg(sender, "invalid-usage", Map.of("usage", "/punish <player> <key>"));
+            return;
+        }
+        QuickReason preset = this.getQuickReason(args[1]);
+        if (preset == null) {
+            sender.sendMessage(MessageUtil.color("&cUnknown punishment key: &e" + args[1]));
+            return;
+        }
+        switch (preset.type) {
+            case "WARN": {
+                this.applyQuickWarn(sender, args[0], preset);
+                break;
+            }
+            case "KICK": {
+                this.applyQuickKick(sender, args[0], preset);
+                break;
+            }
+            default: {
+                this.applyQuickBan(sender, args[0], preset);
+                break;
+            }
+        }
+    }
+
+    private void applyQuickWarn(CommandSender sender, String targetName, QuickReason preset) {
+        Target target = this.resolveTarget(sender, targetName);
+        if (target == null) {
+            return;
+        }
+        String ip = target.ip != null ? target.ip : "unknown";
+        this.plugin.getPunishmentManager().addPunishment(target.uuid, target.name, PunishmentType.WARN, preset.reason, sender.getName(), ip, -1L);
+        Player online = Bukkit.getPlayer((UUID) target.uuid);
+        if (online != null) {
+            this.msg((CommandSender) online, "warn-notify-target", Map.of("reason", preset.reason));
+        }
+        Map<String, String> ph = Map.of("player", target.name, "staff", sender.getName(), "reason", preset.reason);
+        this.broadcastNotify(sender, "warned-by-staff", ph);
+        DiscordWebhook.send(this.plugin, "Warn", target.name, sender.getName(), preset.reason, null, "16776960");
+        this.checkWarnEscalation(sender, target);
+    }
+
+    private void applyQuickKick(CommandSender sender, String targetName, QuickReason preset) {
+        Player online = Bukkit.getPlayer((String) targetName);
+        if (online == null) {
+            this.msg(sender, "player-not-found", Map.of("player", targetName));
+            return;
+        }
+        String ip = online.getAddress() != null ? online.getAddress().getAddress().getHostAddress() : "unknown";
+        Punishment p = this.plugin.getPunishmentManager().addPunishment(online.getUniqueId(), online.getName(), PunishmentType.KICK, preset.reason, sender.getName(), ip, -1L);
+        if (p != null) {
+            this.plugin.getPunishmentManager().unpunishById(p.getId(), "SYSTEM", "Instant kick");
+        }
+        this.kickWithScreen(online, "kick-screen.kick", preset.reason, sender.getName(), "-");
+        Map<String, String> ph = Map.of("player", online.getName(), "staff", sender.getName(), "reason", preset.reason);
+        this.broadcastNotify(sender, "kicked-by-staff", ph);
+        DiscordWebhook.send(this.plugin, "Kick", online.getName(), sender.getName(), preset.reason, null, "10181046");
     }
 
     private void applyQuickBan(CommandSender sender, String targetName, QuickReason preset) {
@@ -684,7 +749,7 @@ TabCompleter {
         if (args.length == 2 && (name.equals("tempban") || name.equals("tempmute") || name.equals("tempwarn"))) {
             return this.filter(List.of("10m", "1h", "1d", "7d", "30d", "perm"), args[1]);
         }
-        if (args.length == 2 && name.equals("ban")) {
+        if (args.length == 2 && (name.equals("ban") || name.equals("punish"))) {
             List<String> keys = new ArrayList<>();
             if (this.plugin.getConfig().isConfigurationSection("quick-reasons")) {
                 keys.addAll(this.plugin.getConfig().getConfigurationSection("quick-reasons").getKeys(false));
@@ -713,10 +778,12 @@ TabCompleter {
 
     private static class QuickReason {
         final String reason;
+        final String type;
         final long durationMillis;
 
-        QuickReason(String reason, long durationMillis) {
+        QuickReason(String reason, String type, long durationMillis) {
             this.reason = reason;
+            this.type = type;
             this.durationMillis = durationMillis;
         }
     }
