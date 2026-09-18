@@ -320,7 +320,7 @@ TabCompleter {
         Player online = Bukkit.getPlayer((UUID)target.uuid);
         if (warns == 3L) {
             Punishment p2;
-            String reason = "Automatick\u00fd kick po 3 warnech";
+            String reason = "Automatic kick after 3 warns";
             if (online != null) {
                 this.kickWithScreen(online, "kick-screen.kick", reason, "FailBan", "-");
             }
@@ -338,7 +338,7 @@ TabCompleter {
             }
             long duration = warns == 5L ? TimeUtil.parseDuration("5h") : (warns == 10L ? TimeUtil.parseDuration("12h") : -1L);
             PunishmentType type = duration == -1L ? PunishmentType.BAN : PunishmentType.TEMPBAN;
-            String reason = "Automatick\u00fd ban po " + warns + " warnech";
+            String reason = "Automatic ban after " + warns + " warns";
             this.plugin.getPunishmentManager().addPunishment(target.uuid, target.name, type, reason, "FailBan", ip, duration);
             String string = timeLeft = duration == -1L ? "permanent" : TimeUtil.formatDuration(duration);
             if (online != null) {
@@ -718,7 +718,7 @@ TabCompleter {
     }
 
     private void kickWithScreen(Player online, String path, String reason, String staff, String timeLeft) {
-        String template = this.plugin.getConfig().getString(path, "&cByl jsi vyhozen.");
+        String template = this.plugin.getConfig().getString(path, "&cYou have been kicked.");
         template = template.replace("{reason}", reason == null ? "" : reason)
                 .replace("{staff}", staff == null ? "" : staff)
                 .replace("{time_left}", timeLeft == null ? "" : timeLeft)
