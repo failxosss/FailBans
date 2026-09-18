@@ -1,7 +1,15 @@
 /*
- * FailBanCommandHandler.java (rekonstruováno z dodaného FailBan.jar + doplněna eskalace warnů)
- * Nahraď tímto souborem svůj cz/failban/plugin/commands/FailBanCommandHandler.java
- * a spusť mvn package (potřebuje paper-api ve svém Maven prostředí).
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  net.kyori.adventure.text.Component
+ *  org.bukkit.Bukkit
+ *  org.bukkit.OfflinePlayer
+ *  org.bukkit.command.Command
+ *  org.bukkit.command.CommandExecutor
+ *  org.bukkit.command.CommandSender
+ *  org.bukkit.command.TabCompleter
+ *  org.bukkit.entity.Player
  */
 package cz.failban.plugin.commands;
 
@@ -12,6 +20,7 @@ import cz.failban.plugin.model.PunishmentType;
 import cz.failban.plugin.util.DiscordWebhook;
 import cz.failban.plugin.util.MessageUtil;
 import cz.failban.plugin.util.TimeUtil;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -112,6 +121,10 @@ TabCompleter {
                 this.handleFailBanRoot(sender, args);
                 break;
             }
+            case "alts": {
+                this.handleAlts(sender, args);
+                break;
+            }
             default: {
                 return false;
             }
@@ -129,8 +142,17 @@ TabCompleter {
 
     private void handleBan(CommandSender sender, String[] args, boolean temp) {
         String reason;
-        int minArgs;
-        int n = minArgs = temp ? 3 : 2;
+
+        if (!temp && args.length == 2) {
+            QuickReason preset = this.getQuickReason(args[1]);
+            if (preset != null) {
+                this.applyQuickBan(sender, args[0], preset);
+                return;
+            }
+        }
+
+        int minArgs = temp ? 3 : 2;
+        int n = minArgs;
         if (args.length < minArgs) {
             this.msg(sender, "invalid-usage", Map.of("usage", temp ? "/tempban <player> <time> <reason>" : "/ban <player> <reason>"));
             return;
@@ -197,8 +219,8 @@ TabCompleter {
 
     private void handleMute(CommandSender sender, String[] args, boolean temp) {
         String reason;
-        int minArgs;
-        int n = minArgs = temp ? 3 : 2;
+        int minArgs = temp ? 3 : 2;
+        int n = minArgs;
         if (args.length < minArgs) {
             this.msg(sender, "invalid-usage", Map.of("usage", temp ? "/tempmute <player> <time> <reason>" : "/mute <player> <reason>"));
             return;
@@ -238,8 +260,8 @@ TabCompleter {
 
     private void handleWarn(CommandSender sender, String[] args, boolean temp) {
         String reason;
-        int minArgs;
-        int n = minArgs = temp ? 3 : 2;
+        int minArgs = temp ? 3 : 2;
+        int n = minArgs;
         if (args.length < minArgs) {
             this.msg(sender, "invalid-usage", Map.of("usage", temp ? "/tempwarn <player> <time> <reason>" : "/warn <player> <reason>"));
             return;
@@ -273,45 +295,33 @@ TabCompleter {
         this.checkWarnEscalation(sender, target);
     }
 
-    /**
-     * Automaticky potrestá hráče podle celkového počtu warnů (WARN + TEMPWARN) v historii:
-     * 3 warny -> kick, 5 warnů -> tempban 5h, 10 warnů -> tempban 12h, 15 warnů -> permanentní ban.
-     */
     private void checkWarnEscalation(CommandSender sender, Target target) {
-        long warns = this.plugin.getPunishmentManager().getHistory(target.uuid).stream()
-                .filter(p -> p.getType().isWarnType())
-                .count();
-
+        long warns = this.plugin.getPunishmentManager().getHistory(target.uuid).stream().filter(p -> p.getType().isWarnType()).count();
         String ip = target.ip != null ? target.ip : "unknown";
-        Player online = Bukkit.getPlayer(target.uuid);
-
+        Player online = Bukkit.getPlayer((UUID)target.uuid);
         if (warns == 3L) {
-            String reason = "Automatický kick po 3 warnech";
+            Punishment p2;
+            String reason = "Automatick\u00fd kick po 3 warnech";
             if (online != null) {
                 this.kickWithScreen(online, "kick-screen.kick", reason, "FailBan", "-");
             }
-            Punishment p = this.plugin.getPunishmentManager()
-                    .addPunishment(target.uuid, target.name, PunishmentType.KICK, reason, "FailBan", ip, -1L);
-            if (p != null) {
-                this.plugin.getPunishmentManager().unpunishById(p.getId(), "SYSTEM", "Instant kick");
+            if ((p2 = this.plugin.getPunishmentManager().addPunishment(target.uuid, target.name, PunishmentType.KICK, reason, "FailBan", ip, -1L)) != null) {
+                this.plugin.getPunishmentManager().unpunishById(p2.getId(), "SYSTEM", "Instant kick");
             }
             this.broadcastNotify(sender, "kicked-by-staff", Map.of("player", target.name, "staff", "FailBan", "reason", reason));
             DiscordWebhook.send(this.plugin, "Auto-Kick", target.name, "FailBan", reason, null, "10181046");
             return;
         }
-
         if (warns == 5L || warns == 10L || warns == 15L) {
+            String timeLeft;
             if (this.plugin.getPunishmentManager().getActiveBan(target.uuid) != null) {
                 return;
             }
-            long duration = warns == 5L ? TimeUtil.parseDuration("5h")
-                    : warns == 10L ? TimeUtil.parseDuration("12h")
-                    : -1L;
+            long duration = warns == 5L ? TimeUtil.parseDuration("5h") : (warns == 10L ? TimeUtil.parseDuration("12h") : -1L);
             PunishmentType type = duration == -1L ? PunishmentType.BAN : PunishmentType.TEMPBAN;
-            String reason = "Automatický ban po " + warns + " warnech";
-
+            String reason = "Automatick\u00fd ban po " + warns + " warnech";
             this.plugin.getPunishmentManager().addPunishment(target.uuid, target.name, type, reason, "FailBan", ip, duration);
-            String timeLeft = duration == -1L ? "permanent" : TimeUtil.formatDuration(duration);
+            String string = timeLeft = duration == -1L ? "permanent" : TimeUtil.formatDuration(duration);
             if (online != null) {
                 this.kickWithScreen(online, "kick-screen.ban", reason, "FailBan", timeLeft);
             }
@@ -331,7 +341,7 @@ TabCompleter {
             return;
         }
         String reason = args.length > 1 ? String.join((CharSequence)" ", Arrays.copyOfRange(args, 1, args.length)) : "Removed";
-        List<Punishment> actives = this.plugin.getPunishmentManager().getActivePunishments(target.uuid).stream().filter(p -> p.getType().isWarnType()).collect(Collectors.toList());
+        List actives = this.plugin.getPunishmentManager().getActivePunishments(target.uuid).stream().filter(p -> p.getType().isWarnType()).collect(Collectors.toList());
         if (actives.isEmpty()) {
             this.msg(sender, "not-muted", Map.of("player", target.name));
             return;
@@ -510,6 +520,81 @@ TabCompleter {
         sender.sendMessage(MessageUtil.color("&8&m--------------------------------"));
     }
 
+    private void handleAlts(CommandSender sender, String[] args) {
+        if (args.length < 1) {
+            this.msg(sender, "invalid-usage", Map.of("usage", "/alts <player>"));
+            return;
+        }
+        Target target = this.resolveTarget(sender, args[0]);
+        if (target == null) {
+            return;
+        }
+        List<String> knownIps = this.plugin.getPlayerDataManager().getKnownIps(target.uuid);
+        String currentIp = target.ip != null ? target.ip : (knownIps.isEmpty() ? null : knownIps.get(0));
+
+        sender.sendMessage(MessageUtil.color("&8&m--------------------"));
+        sender.sendMessage(MessageUtil.color("&cAlt accounts \u00bb &e" + target.name));
+
+        if (currentIp == null) {
+            sender.sendMessage(MessageUtil.color("&7No known IP for this player."));
+            sender.sendMessage(MessageUtil.color("&8&m--------------------"));
+            return;
+        }
+
+        List<String> alts = this.plugin.getPlayerDataManager().getAltAccounts(currentIp, target.uuid);
+        if (alts.isEmpty()) {
+            sender.sendMessage(MessageUtil.color("&aNo alt accounts found."));
+        } else {
+            for (String alt : alts) {
+                sender.sendMessage(MessageUtil.color(" &8- &f" + alt));
+            }
+        }
+        sender.sendMessage(MessageUtil.color("&8&m--------------------"));
+    }
+
+    private QuickReason getQuickReason(String key) {
+        String base = "quick-reasons." + key.toLowerCase();
+        String reason = this.plugin.getConfig().getString(base + ".reason");
+        if (reason == null) {
+            return null;
+        }
+        String timeStr = this.plugin.getConfig().getString(base + ".time", "perm");
+        long duration = timeStr.equalsIgnoreCase("perm") ? -1L : TimeUtil.parseDuration(timeStr);
+        if (duration == -2L) {
+            duration = -1L;
+        }
+        return new QuickReason(reason, duration);
+    }
+
+    private void applyQuickBan(CommandSender sender, String targetName, QuickReason preset) {
+        Target target = this.resolveTarget(sender, targetName);
+        if (target == null) {
+            return;
+        }
+        Punishment existing = this.plugin.getPunishmentManager().getActiveBan(target.uuid);
+        if (existing != null) {
+            this.msg(sender, "already-banned", Map.of("player", target.name));
+            return;
+        }
+        boolean temp = preset.durationMillis != -1L;
+        String ip = target.ip != null ? target.ip : "unknown";
+        PunishmentType type = temp ? PunishmentType.TEMPBAN : PunishmentType.BAN;
+        this.plugin.getPunishmentManager().addPunishment(target.uuid, target.name, type, preset.reason, sender.getName(), ip, preset.durationMillis);
+
+        Player online = Bukkit.getPlayer((UUID) target.uuid);
+        if (online != null) {
+            this.kickWithScreen(online, "kick-screen.ban", preset.reason, sender.getName(), temp ? TimeUtil.formatDuration(preset.durationMillis) : "permanent");
+        }
+
+        HashMap<String, String> ph = new HashMap<>();
+        ph.put("player", target.name);
+        ph.put("staff", sender.getName());
+        ph.put("reason", preset.reason);
+        ph.put("time_left", temp ? TimeUtil.formatDuration(preset.durationMillis) : "permanent");
+        this.broadcastNotify(sender, temp ? "tempbanned-by-staff" : "banned-by-staff", ph);
+        DiscordWebhook.send(this.plugin, temp ? "Temp Ban" : "Ban", target.name, sender.getName(), preset.reason, temp ? TimeUtil.formatDuration(preset.durationMillis) : "permanent", "15158332");
+    }
+
     private void handleFailBanRoot(CommandSender sender, String[] args) {
         if (args.length < 1) {
             this.sendHelp(sender);
@@ -526,10 +611,10 @@ TabCompleter {
     }
 
     private void sendHelp(CommandSender sender) {
-        String[] lines;
         sender.sendMessage(MessageUtil.color("&8&m--------------------------------"));
         sender.sendMessage(MessageUtil.color("&c&lFailBan &7- Help"));
-        for (String l : lines = new String[]{"/ban <player> <reason>", "/tempban <player> <time> <reason>", "/unban <player> [reason]", "/kick <player> <reason>", "/mute <player> <reason>", "/tempmute <player> <time> <reason>", "/unmute <player> [reason]", "/warn <player> <reason>", "/tempwarn <player> <time> <reason>", "/unwarn <player> [reason]", "/history <player>", "/check <player>", "/banlist [page]", "/unpunish <id> [reason]", "/change-reason <id> <reason>", "/failcheck <player>", "/failban reload", "/failban help"}) {
+        String[] lines = new String[]{"/ban <player> <reason>", "/tempban <player> <time> <reason>", "/unban <player> [reason]", "/kick <player> <reason>", "/mute <player> <reason>", "/tempmute <player> <time> <reason>", "/unmute <player> [reason]", "/warn <player> <reason>", "/tempwarn <player> <time> <reason>", "/unwarn <player> [reason]", "/history <player>", "/check <player>", "/banlist [page]", "/unpunish <id> [reason]", "/change-reason <id> <reason>", "/failcheck <player>", "/failban reload", "/failban help"};
+        for (String l : lines) {
             sender.sendMessage(MessageUtil.color("&7- &e" + l));
         }
         sender.sendMessage(MessageUtil.color("&8&m--------------------------------"));
@@ -599,6 +684,13 @@ TabCompleter {
         if (args.length == 2 && (name.equals("tempban") || name.equals("tempmute") || name.equals("tempwarn"))) {
             return this.filter(List.of("10m", "1h", "1d", "7d", "30d", "perm"), args[1]);
         }
+        if (args.length == 2 && name.equals("ban")) {
+            List<String> keys = new ArrayList<>();
+            if (this.plugin.getConfig().isConfigurationSection("quick-reasons")) {
+                keys.addAll(this.plugin.getConfig().getConfigurationSection("quick-reasons").getKeys(false));
+            }
+            return this.filter(keys, args[1]);
+        }
         return Collections.emptyList();
     }
 
@@ -616,6 +708,16 @@ TabCompleter {
             this.uuid = uuid;
             this.name = name;
             this.ip = ip;
+        }
+    }
+
+    private static class QuickReason {
+        final String reason;
+        final long durationMillis;
+
+        QuickReason(String reason, long durationMillis) {
+            this.reason = reason;
+            this.durationMillis = durationMillis;
         }
     }
 }
