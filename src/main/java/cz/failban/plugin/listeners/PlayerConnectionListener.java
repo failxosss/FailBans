@@ -28,7 +28,14 @@ public class PlayerConnectionListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
         UUID uuid = event.getUniqueId();
+        String ip = event.getAddress() != null ? event.getAddress().getHostAddress() : null;
+
         Punishment ban = plugin.getPunishmentManager().getActiveBan(uuid);
+
+        if (ban == null && ip != null) {
+            ban = plugin.getPunishmentManager().getActiveBanByIp(ip);
+        }
+
         if (ban == null) return;
 
         String path = ban.isPermanent() ? "kick-screen.ban" : "kick-screen.ban";
