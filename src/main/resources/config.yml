@@ -63,27 +63,201 @@ kick-screen:
 # Format used for /banlist and /history
 history-format: "&8#{id} &7[{type}] &e{player} &7- &f{reason} &7(by &e{staff}&7, {date})"
 
-# Rychlé důvody pro /ban <player> <klíč>
-# time: "perm" nebo formát jako 10s, 30m, 2h, 7d, 1mo
+# Quick punishment presets for /ban <player> <key> and /punish <player> <key>
+# type: WARN, KICK or BAN
+# time: only used for type BAN – "perm" or a duration like 10s, 30m, 2h, 7d, 1mo
 quick-reasons:
-  hacking:
-    reason: "Cheating / Hacking"
-    time: "perm"
   spam:
+    type: WARN
     reason: "Spam"
-    time: "1h"
-  swear:
-    reason: "Inappropriate language"
-    time: "1d"
+  spam_repeat:
+    type: KICK
+    reason: "Repeated spam"
   advertising:
+    type: WARN
     reason: "Advertising"
-    time: "7d"
-  griefing:
-    reason: "Griefing"
-    time: "perm"
-  teaming:
-    reason: "Team griefing / teaming"
+  advertising_repeat:
+    type: BAN
+    time: "1d"
+    reason: "Repeated advertising"
+  swearing:
+    type: WARN
+    reason: "Swearing"
+  swearing_repeat:
+    type: KICK
+    reason: "Repeated swearing"
+  insulting_players:
+    type: WARN
+    reason: "Insulting players"
+  insulting_players_repeat:
+    type: BAN
+    time: "1d"
+    reason: "Repeated insulting of players"
+  toxicity:
+    type: WARN
+    reason: "Toxicity"
+  toxicity_repeat:
+    type: KICK
+    reason: "Repeated toxicity"
+  toxicity_severe:
+    type: BAN
+    time: "1d"
+    reason: "Severe / repeated toxicity"
+  provoking:
+    type: WARN
+    reason: "Provoking"
+  harassing_player:
+    type: KICK
+    reason: "Harassing a player"
+  threatening:
+    type: BAN
     time: "3d"
+    reason: "Threatening another player"
+  hate_speech:
+    type: BAN
+    time: "7d"
+    reason: "Racist / hate speech"
+  nsfw_content:
+    type: BAN
+    time: "7d"
+    reason: "NSFW content"
+  inappropriate_name:
+    type: WARN
+    reason: "Inappropriate skin / name"
+  inappropriate_name_repeat:
+    type: BAN
+    time: "1d"
+    reason: "Repeated inappropriate skin / name"
+  ban_evasion:
+    type: BAN
+    time: "perm"
+    reason: "Ban evasion"
+  bug_abuse:
+    type: BAN
+    time: "3d"
+    reason: "Bug abuse"
+  bug_abuse_repeat:
+    type: BAN
+    time: "7d"
+    reason: "Repeated bug abuse"
+  cheating:
+    type: BAN
+    time: "7d"
+    reason: "Cheating / hacks"
+  cheating_repeat:
+    type: BAN
+    time: "perm"
+    reason: "Repeated cheating"
+  autoclicker:
+    type: BAN
+    time: "3d"
+    reason: "Autoclicker"
+  xray:
+    type: BAN
+    time: "7d"
+    reason: "X-Ray"
+  killaura:
+    type: BAN
+    time: "7d"
+    reason: "KillAura"
+  fly_hack:
+    type: BAN
+    time: "7d"
+    reason: "Fly hack"
+  speed_hack:
+    type: BAN
+    time: "7d"
+    reason: "Speed hack"
+  reach_hack:
+    type: BAN
+    time: "7d"
+    reason: "Reach hack"
+  item_duplication:
+    type: BAN
+    time: "7d"
+    reason: "Item duplication"
+  item_duplication_repeat:
+    type: BAN
+    time: "perm"
+    reason: "Repeated item duplication"
+  theft_scam:
+    type: BAN
+    time: "2d"
+    reason: "Theft / scam"
+  teaming:
+    type: WARN
+    reason: "Teaming in a no-team mode"
+  teaming_repeat:
+    type: KICK
+    reason: "Repeated teaming in a no-team mode"
+  spawn_killing:
+    type: WARN
+    reason: "Spawn killing"
+  griefing:
+    type: BAN
+    time: "1d"
+    reason: "Griefing"
+  destroying_property:
+    type: BAN
+    time: "2d"
+    reason: "Destroying another player's property"
+  economy_exploit:
+    type: BAN
+    time: "3d"
+    reason: "Economy exploit"
+  fake_staff:
+    type: BAN
+    time: "7d"
+    reason: "Impersonating staff"
+  fake_perks:
+    type: BAN
+    time: "3d"
+    reason: "Falsely offering / selling perks"
+  harassing_staff:
+    type: WARN
+    reason: "Harassing staff"
+  harassing_staff_repeat:
+    type: KICK
+    reason: "Repeated harassing of staff"
+  ignoring_staff:
+    type: KICK
+    reason: "Ignoring staff instructions"
+  obstructing_staff:
+    type: BAN
+    time: "1d"
+    reason: "Deliberately obstructing staff"
+  personal_data_leak:
+    type: BAN
+    time: "perm"
+    reason: "Leaking personal information"
+  doxxing:
+    type: BAN
+    time: "perm"
+    reason: "Doxxing"
+  ddos_threat:
+    type: BAN
+    time: "perm"
+    reason: "Threats / DDoS threats"
+  promoting_cheats:
+    type: BAN
+    time: "7d"
+    reason: "Promoting cheats"
+  selling_cheats:
+    type: BAN
+    time: "perm"
+    reason: "Selling cheats"
+  selling_accounts:
+    type: BAN
+    time: "3d"
+    reason: "Selling accounts"
+  trade_scam:
+    type: BAN
+    time: "2d"
+    reason: "Trade scam"
+  multiaccount_evasion:
+    type: BAN
+    time: "perm"
+    reason: "Multi-accounting to evade punishment"
 
 # Logs every punishment to Discord via webhook
 discord:
