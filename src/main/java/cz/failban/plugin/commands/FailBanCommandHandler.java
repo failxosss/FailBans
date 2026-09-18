@@ -572,6 +572,10 @@ TabCompleter {
     }
 
     private QuickReason getQuickReason(String key) {
+        int annotationIdx = key.indexOf('\u00A0');
+        if (annotationIdx >= 0) {
+            key = key.substring(0, annotationIdx);
+        }
         String base = "quick-reasons." + key.toLowerCase();
         String reason = this.plugin.getConfig().getString(base + ".reason");
         if (reason == null) {
@@ -584,6 +588,19 @@ TabCompleter {
             duration = -1L;
         }
         return new QuickReason(reason, type, duration);
+    }
+
+    private String describeQuickReason(String key) {
+        String base = "quick-reasons." + key.toLowerCase();
+        String type = this.plugin.getConfig().getString(base + ".type", "BAN").toUpperCase();
+        if (type.equals("BAN")) {
+            String timeStr = this.plugin.getConfig().getString(base + ".time", "perm");
+            if (timeStr == null || timeStr.equalsIgnoreCase("perm")) {
+                return "BAN PERM";
+            }
+            return "BAN " + timeStr;
+        }
+        return type;
     }
 
     private void handlePunish(CommandSender sender, String[] args) {
@@ -767,12 +784,16 @@ TabCompleter {
         if (args.length == 2 && (name.equals("tempban") || name.equals("tempmute") || name.equals("tempwarn"))) {
             return this.filter(List.of("10m", "1h", "1d", "7d", "30d", "perm"), args[1]);
         }
-        if (args.length == 2 && (name.equals("ban") || name.equals("punish"))) {
+        if (args.length == 2 && (name.equals("ban") || name.equals("punish") || name.equals("kick") || name.equals("warn"))) {
             List<String> keys = new ArrayList<>();
             if (this.plugin.getConfig().isConfigurationSection("quick-reasons")) {
                 keys.addAll(this.plugin.getConfig().getConfigurationSection("quick-reasons").getKeys(false));
             }
-            return this.filter(keys, args[1]);
+            String lower = args[1].toLowerCase();
+            return keys.stream()
+                    .filter(k -> k.toLowerCase().startsWith(lower))
+                    .map(k -> k + "\u00A0(" + this.describeQuickReason(k) + ")")
+                    .collect(Collectors.toList());
         }
         return Collections.emptyList();
     }
