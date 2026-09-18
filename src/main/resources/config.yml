@@ -63,6 +63,28 @@ kick-screen:
 # Format used for /banlist and /history
 history-format: "&8#{id} &7[{type}] &e{player} &7- &f{reason} &7(by &e{staff}&7, {date})"
 
+# Rychlé důvody pro /ban <player> <klíč>
+# time: "perm" nebo formát jako 10s, 30m, 2h, 7d, 1mo
+quick-reasons:
+  hacking:
+    reason: "Cheating / Hacking"
+    time: "perm"
+  spam:
+    reason: "Spam"
+    time: "1h"
+  swear:
+    reason: "Inappropriate language"
+    time: "1d"
+  advertising:
+    reason: "Advertising"
+    time: "7d"
+  griefing:
+    reason: "Griefing"
+    time: "perm"
+  teaming:
+    reason: "Team griefing / teaming"
+    time: "3d"
+
 # Logs every punishment to Discord via webhook
 discord:
   enabled: false
