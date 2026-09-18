@@ -40,7 +40,6 @@ messages:
 # & is a color code
 kick-screen:
   ban: |
-    &f&lConnection Lost
     
     &c&lYou are banned from this server!
     
