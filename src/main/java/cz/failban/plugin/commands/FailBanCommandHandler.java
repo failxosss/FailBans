@@ -1,16 +1,3 @@
-/*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  net.kyori.adventure.text.Component
- *  org.bukkit.Bukkit
- *  org.bukkit.OfflinePlayer
- *  org.bukkit.command.Command
- *  org.bukkit.command.CommandExecutor
- *  org.bukkit.command.CommandSender
- *  org.bukkit.command.TabCompleter
- *  org.bukkit.entity.Player
- */
 package cz.failban.plugin.commands;
 
 import cz.failban.plugin.FailBan;
@@ -345,7 +332,7 @@ TabCompleter {
             return;
         }
         String reason = args.length > 1 ? String.join((CharSequence)" ", Arrays.copyOfRange(args, 1, args.length)) : "Removed";
-        List actives = this.plugin.getPunishmentManager().getActivePunishments(target.uuid).stream().filter(p -> p.getType().isWarnType()).collect(Collectors.toList());
+        List<Punishment> actives = this.plugin.getPunishmentManager().getActivePunishments(target.uuid).stream().filter(p -> p.getType().isWarnType()).collect(Collectors.toList());
         if (actives.isEmpty()) {
             this.msg(sender, "not-muted", Map.of("player", target.name));
             return;
@@ -464,8 +451,8 @@ TabCompleter {
         }
         this.msg(sender, "unpunish-success", Map.of("id", String.valueOf(id), "staff", sender.getName()));
         Punishment p = this.plugin.getPunishmentManager().getById(id);
-        Object playerName = p != null ? p.getPlayerName() : "ID #" + id;
-        DiscordWebhook.send(this.plugin, "Unpunish (#" + id + ")", (String)playerName, sender.getName(), reason, null, "3066993");
+        String playerName = p != null ? p.getPlayerName() : "ID #" + id;
+        DiscordWebhook.send(this.plugin, "Unpunish (#" + id + ")", playerName, sender.getName(), reason, null, "3066993");
     }
 
     private void handleChangeReason(CommandSender sender, String[] args) {
@@ -489,8 +476,8 @@ TabCompleter {
         }
         this.msg(sender, "change-reason-success", Map.of("id", String.valueOf(id), "reason", newReason));
         Punishment p = this.plugin.getPunishmentManager().getById(id);
-        Object playerName = p != null ? p.getPlayerName() : "ID #" + id;
-        DiscordWebhook.send(this.plugin, "Reason Changed (#" + id + ")", (String)playerName, sender.getName(), newReason, null, "3447003");
+        String playerName = p != null ? p.getPlayerName() : "ID #" + id;
+        DiscordWebhook.send(this.plugin, "Reason Changed (#" + id + ")", playerName, sender.getName(), newReason, null, "3447003");
     }
 
     private void handleFailCheck(CommandSender sender, String[] args) {
