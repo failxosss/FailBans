@@ -40,19 +40,16 @@ messages:
 # & is a color code
 kick-screen:
   ban: |
-    &7&m                                        
+    &f&lConnection Lost
     
-    &c&lConnection Lost
+    &c&lYou are banned from this server!
     
-    &c&lFailBan &7» &cBanned for {reason}
-    &7Banned by &c{staff}
+    &fBanned on: &f{date}
+    &fBanned by: &f{staff}
+    &fReason: &f{reason}
     
-    &7Unban in &7» &c{time_left}
-    
-    &7Unban application in TS or forum
-    &e&nForum &7» &ecoming soon
-    &e&nDiscord &7» &ecoming soon
-    &7&m                                        
+    &fYou are temporarily banned!
+    &eTime remaining: &e{time_left}
   kick: |
     &7&m                                        
     
