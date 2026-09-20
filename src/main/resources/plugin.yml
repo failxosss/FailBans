@@ -84,7 +84,7 @@ commands:
     permission: failban.admin
   sus:
     description: Opens the GUI with suspicious players
-    usage: /sus [add|remove|clear|back|list|hooks|reload]
+    usage: /sus [add|remove|clear|back|list|hooks|notify|reload]
     permission: failban.sus.use
   susflag:
     description: Bridge command for anticheats
