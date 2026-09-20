@@ -48,6 +48,15 @@ spectate:
   lock-camera: false
   restore-on-join: true
   stop-when-target-leaves: false
+  # Keep SPECTATOR when the world changes (Multiverse & co. would otherwise set the world's gamemode, e.g. survival)
+  keep-spectator-mode: true
+  # After LEFT-CLICK spectate the player disappears from the /sus list (treated as resolved)
+  remove-record-on-spectate: true
+  # While spectating: if the target is farther than <distance> blocks (or in another world), teleport to him automatically
+  auto-teleport:
+    enabled: true
+    distance: 50
+    check-interval-ticks: 10
 
 integration:
   shift-left-command: "failcheck {player}"
@@ -68,6 +77,8 @@ messages:
   target-offline: "&e{player} &cis not online right now."
   target-left: "&8[&dSUS&8] &e{player} &7has left the server."
   reloaded: "&aSus configuration reloaded."
+  notify-on: "&8[&dSUS&8] &7New-sus notifications: &aON"
+  notify-off: "&8[&dSUS&8] &7New-sus notifications: &cOFF &8(&7/sus notify &7to turn them on&8)"
 
 anticheat-hooks:
   grim:
