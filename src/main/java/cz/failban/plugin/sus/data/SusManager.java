@@ -1,16 +1,8 @@
 package cz.failban.plugin.sus.data;
 
 import cz.failban.plugin.sus.SusModule;
+import cz.failban.plugin.sus.data.SusRecord;
 import cz.failban.plugin.sus.util.Msg;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.Sound;
-import org.bukkit.World;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,13 +12,20 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.Sound;
+import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
 public class SusManager {
-
     private final SusModule module;
-    private final Map<UUID, SusRecord> records = new ConcurrentHashMap<>();
+    private final Map<UUID, SusRecord> records = new ConcurrentHashMap<UUID, SusRecord>();
     private final File file;
-
     private long expireMillis;
     private int minViolations;
     private boolean notifyStaff;
@@ -34,54 +33,51 @@ public class SusManager {
     public SusManager(SusModule module) {
         this.module = module;
         this.file = new File(module.plugin().getDataFolder(), "sus-records.yml");
-        reloadSettings();
+        this.reloadSettings();
     }
 
     public void reloadSettings() {
-        this.expireMillis = Math.max(0L, module.config().getLong("records.expire-minutes", 60)) * 60_000L;
-        this.minViolations = module.config().getInt("records.min-violations", 1);
-        this.notifyStaff = module.config().getBoolean("records.notify-staff", true);
+        this.expireMillis = Math.max(0L, this.module.config().getLong("records.expire-minutes", 60L)) * 60000L;
+        this.minViolations = this.module.config().getInt("records.min-violations", 1);
+        this.notifyStaff = this.module.config().getBoolean("records.notify-staff", true);
     }
 
     public int size() {
-        return records.size();
+        return this.records.size();
     }
 
     public SusRecord get(UUID uuid) {
-        return records.get(uuid);
+        return this.records.get(uuid);
     }
 
     public SusRecord getByName(String name) {
-        for (SusRecord r : records.values()) {
-            if (r.getName().equalsIgnoreCase(name)) {
-                return r;
-            }
+        for (SusRecord r : this.records.values()) {
+            if (!r.getName().equalsIgnoreCase(name)) continue;
+            return r;
         }
         return null;
     }
 
     public boolean remove(UUID uuid) {
-        return records.remove(uuid) != null;
+        return this.records.remove(uuid) != null;
     }
 
     public int clearAll() {
-        int size = records.size();
-        records.clear();
+        int size = this.records.size();
+        this.records.clear();
         return size;
     }
 
     public void flag(UUID uuid, String name, String anticheat, String check, int violations) {
-        if (uuid == null || violations < minViolations) {
+        if (uuid == null || violations < this.minViolations) {
             return;
         }
-        Player online = Bukkit.getPlayer(uuid);
+        Player online = Bukkit.getPlayer((UUID)uuid);
         if (online != null && online.hasPermission("failban.sus.bypass")) {
             return;
         }
-
-        SusRecord record = records.computeIfAbsent(uuid, u -> new SusRecord(u, name));
+        SusRecord record = this.records.computeIfAbsent(uuid, u -> new SusRecord((UUID)u, name));
         boolean isNew = record.getTotalFlags() == 0;
-
         record.setName(name);
         record.setAnticheat(anticheat);
         record.setLastCheck(check);
@@ -89,35 +85,26 @@ public class SusManager {
         record.addFlag();
         record.setViolations(Math.max(record.getViolations(), violations));
         record.setLastFlag(System.currentTimeMillis());
-        record.setReason(resolveReason(check, record.getReason()));
-
+        record.setReason(this.resolveReason(check, record.getReason()));
         if (online != null) {
             if (Bukkit.isPrimaryThread()) {
-                storeLocation(record, online);
+                this.storeLocation(record, online);
             } else {
-                Bukkit.getScheduler().runTask(module.plugin(), () -> {
+                Bukkit.getScheduler().runTask((Plugin)this.module.plugin(), () -> {
                     if (online.isOnline()) {
-                        storeLocation(record, online);
+                        this.storeLocation(record, online);
                     }
                 });
             }
         }
-
-        if (notifyStaff && isNew) {
-            String raw = module.config().getString("messages.new-sus",
-                    "&8[&dSUS&8] &f{player} &7was added to /sus &8(&d{reason} &7by &b{anticheat}&8)");
-            String msg = Msg.color(raw
-                    .replace("{player}", record.getName())
-                    .replace("{reason}", record.getReason())
-                    .replace("{anticheat}", record.getAnticheat())
-                    .replace("{check}", record.getLastCheck())
-                    .replace("{vl}", String.valueOf(record.getViolations())));
-            Bukkit.getScheduler().runTask(module.plugin(), () -> {
+        if (this.notifyStaff && isNew) {
+            String raw = this.module.config().getString("messages.new-sus", "&8[&dSUS&8] &f{player} &7was added to /sus &8(&d{reason} &7by &b{anticheat}&8)");
+            String msg = Msg.color(raw.replace("{player}", record.getName()).replace("{reason}", record.getReason()).replace("{anticheat}", record.getAnticheat()).replace("{check}", record.getLastCheck()).replace("{vl}", String.valueOf(record.getViolations())));
+            Bukkit.getScheduler().runTask((Plugin)this.module.plugin(), () -> {
                 for (Player staff : Bukkit.getOnlinePlayers()) {
-                    if (staff.hasPermission("failban.sus.notify")) {
-                        staff.sendMessage(msg);
-                        staff.playSound(staff.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.6f, 1.6f);
-                    }
+                    if (!NotifyManager.canReceive(staff, "failban.sus.notify")) continue;
+                    staff.sendMessage(msg);
+                    staff.playSound(staff.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.6f, 1.6f);
                 }
             });
         }
@@ -131,8 +118,7 @@ public class SusManager {
 
     public SusRecord manual(OfflinePlayer target, String reason, String staffName) {
         String display = reason.toUpperCase(Locale.ROOT).replace(' ', '_');
-        SusRecord record = records.computeIfAbsent(target.getUniqueId(),
-                u -> new SusRecord(u, target.getName() == null ? "unknown" : target.getName()));
+        SusRecord record = this.records.computeIfAbsent(target.getUniqueId(), u -> new SusRecord((UUID)u, target.getName() == null ? "unknown" : target.getName()));
         record.setName(target.getName());
         record.setAnticheat("MANUAL/" + staffName);
         record.setReason(display);
@@ -142,7 +128,7 @@ public class SusManager {
         record.setLastFlag(System.currentTimeMillis());
         Player online = target.getPlayer();
         if (online != null) {
-            storeLocation(record, online);
+            this.storeLocation(record, online);
         }
         return record;
     }
@@ -151,58 +137,49 @@ public class SusManager {
         if (check == null || check.isEmpty()) {
             return current;
         }
-        ConfigurationSection section = module.config().getConfigurationSection("reason-map");
+        ConfigurationSection section = this.module.config().getConfigurationSection("reason-map");
         if (section != null) {
             String lower = check.toLowerCase(Locale.ROOT);
             for (String key : section.getKeys(false)) {
                 for (String keyword : key.toLowerCase(Locale.ROOT).split("\\|")) {
-                    if (!keyword.isEmpty() && lower.contains(keyword)) {
-                        return section.getString(key, "CHEATING");
-                    }
+                    if (keyword.isEmpty() || !lower.contains(keyword)) continue;
+                    return section.getString(key, "CHEATING");
                 }
             }
         }
-        return module.config().getString("reason-map-default", "CHEATING");
+        return this.module.config().getString("reason-map-default", "CHEATING");
     }
 
     public void purgeExpired() {
-        if (expireMillis <= 0) {
+        if (this.expireMillis <= 0L) {
             return;
         }
         long now = System.currentTimeMillis();
-        records.values().removeIf(r -> now - r.getLastFlag() > expireMillis);
+        this.records.values().removeIf(r -> now - r.getLastFlag() > this.expireMillis);
     }
 
     public List<SusRecord> sorted(String worldFilter, String sortMode) {
-        List<SusRecord> list = new ArrayList<>(records.values());
+        List<SusRecord> list = new ArrayList<SusRecord>(this.records.values());
         if (worldFilter != null && !worldFilter.equalsIgnoreCase("ALL")) {
-            list.removeIf(r -> !environmentOf(r).equalsIgnoreCase(worldFilter));
+            list.removeIf(r -> !this.environmentOf((SusRecord)r).equalsIgnoreCase(worldFilter));
         }
-        Comparator<SusRecord> comparator;
-        if ("VIOLATIONS".equalsIgnoreCase(sortMode)) {
-            comparator = Comparator.comparingInt(SusRecord::getViolations).reversed();
-        } else if ("FLAGS".equalsIgnoreCase(sortMode)) {
-            comparator = Comparator.comparingInt(SusRecord::getTotalFlags).reversed();
-        } else if ("NAME".equalsIgnoreCase(sortMode)) {
-            comparator = Comparator.comparing(r -> r.getName().toLowerCase(Locale.ROOT));
-        } else {
-            comparator = Comparator.comparingLong(SusRecord::getLastFlag).reversed();
-        }
+        Comparator<SusRecord> comparator = "VIOLATIONS".equalsIgnoreCase(sortMode) ? Comparator.comparingInt(SusRecord::getViolations).reversed() : ("FLAGS".equalsIgnoreCase(sortMode) ? Comparator.comparingInt(SusRecord::getTotalFlags).reversed() : ("NAME".equalsIgnoreCase(sortMode) ? Comparator.comparing(r -> r.getName().toLowerCase(Locale.ROOT)) : Comparator.comparingLong(SusRecord::getLastFlag).reversed()));
         list.sort(comparator);
         return list;
     }
 
     public String environmentOf(SusRecord record) {
-        World world = Bukkit.getWorld(record.getWorld());
+        World world = Bukkit.getWorld((String)record.getWorld());
         if (world != null) {
             switch (world.getEnvironment()) {
-                case NETHER:
+                case NETHER: {
                     return "NETHER";
-                case THE_END:
+                }
+                case THE_END: {
                     return "END";
-                default:
-                    return "OVERWORLD";
+                }
             }
+            return "OVERWORLD";
         }
         String lower = record.getWorld().toLowerCase(Locale.ROOT);
         if (lower.contains("nether")) {
@@ -215,10 +192,10 @@ public class SusManager {
     }
 
     public void load() {
-        if (!file.exists()) {
+        if (!this.file.exists()) {
             return;
         }
-        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration((File)this.file);
         ConfigurationSection root = yaml.getConfigurationSection("records");
         if (root == null) {
             return;
@@ -227,9 +204,7 @@ public class SusManager {
             try {
                 UUID uuid = UUID.fromString(key);
                 ConfigurationSection s = root.getConfigurationSection(key);
-                if (s == null) {
-                    continue;
-                }
+                if (s == null) continue;
                 SusRecord r = new SusRecord(uuid, s.getString("name", "unknown"));
                 r.setReason(s.getString("reason", "CHEATING"));
                 r.setAnticheat(s.getString("anticheat", "UNKNOWN"));
@@ -246,41 +221,42 @@ public class SusManager {
                         r.getCheckCounts().put(c, checks.getInt(c));
                     }
                 }
-                records.put(uuid, r);
-            } catch (IllegalArgumentException ignored) {
+                this.records.put(uuid, r);
             }
+            catch (IllegalArgumentException illegalArgumentException) {}
         }
-        purgeExpired();
+        this.purgeExpired();
     }
 
     public void save() {
         YamlConfiguration yaml = new YamlConfiguration();
-        for (SusRecord r : records.values()) {
-            String base = "records." + r.getUuid();
-            yaml.set(base + ".name", r.getName());
-            yaml.set(base + ".reason", r.getReason());
-            yaml.set(base + ".anticheat", r.getAnticheat());
-            yaml.set(base + ".last-check", r.getLastCheck());
-            yaml.set(base + ".total-flags", r.getTotalFlags());
-            yaml.set(base + ".violations", r.getViolations());
-            yaml.set(base + ".first-flag", r.getFirstFlag());
-            yaml.set(base + ".last-flag", r.getLastFlag());
-            yaml.set(base + ".world", r.getWorld());
-            yaml.set(base + ".x", r.getX());
-            yaml.set(base + ".y", r.getY());
-            yaml.set(base + ".z", r.getZ());
+        for (SusRecord r : this.records.values()) {
+            String base = "records." + String.valueOf(r.getUuid());
+            yaml.set(base + ".name", (Object)r.getName());
+            yaml.set(base + ".reason", (Object)r.getReason());
+            yaml.set(base + ".anticheat", (Object)r.getAnticheat());
+            yaml.set(base + ".last-check", (Object)r.getLastCheck());
+            yaml.set(base + ".total-flags", (Object)r.getTotalFlags());
+            yaml.set(base + ".violations", (Object)r.getViolations());
+            yaml.set(base + ".first-flag", (Object)r.getFirstFlag());
+            yaml.set(base + ".last-flag", (Object)r.getLastFlag());
+            yaml.set(base + ".world", (Object)r.getWorld());
+            yaml.set(base + ".x", (Object)r.getX());
+            yaml.set(base + ".y", (Object)r.getY());
+            yaml.set(base + ".z", (Object)r.getZ());
             for (Map.Entry<String, Integer> e : r.getCheckCounts().entrySet()) {
-                yaml.set(base + ".checks." + e.getKey(), e.getValue());
+                yaml.set(base + ".checks." + e.getKey(), (Object)e.getValue());
             }
         }
         try {
-            File folder = module.plugin().getDataFolder();
+            File folder = this.module.plugin().getDataFolder();
             if (!folder.exists() && !folder.mkdirs()) {
-                module.plugin().getLogger().warning("[Sus] Could not create the plugin folder.");
+                this.module.plugin().getLogger().warning("[Sus] Could not create the plugin folder.");
             }
-            yaml.save(file);
-        } catch (IOException e) {
-            module.plugin().getLogger().warning("[Sus] Could not save sus-records.yml: " + e.getMessage());
+            yaml.save(this.file);
+        }
+        catch (IOException e) {
+            this.module.plugin().getLogger().warning("[Sus] Could not save sus-records.yml: " + e.getMessage());
         }
     }
 }
