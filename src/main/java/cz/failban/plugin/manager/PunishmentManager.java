@@ -99,6 +99,44 @@ public class PunishmentManager {
         return null;
     }
 
+    /** Active IPBAN / TEMPIPBAN for the given IP address (or null). */
+    public Punishment getActiveIpBan(String ip) {
+        if (ip == null) {
+            return null;
+        }
+        String sql = "SELECT * FROM punishments WHERE ip = ? AND active = 1 AND (type = 'IPBAN' OR type = 'TEMPIPBAN') ORDER BY created_at DESC";
+        try (PreparedStatement ps = this.conn().prepareStatement(sql)) {
+            ps.setString(1, ip);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Punishment p = this.mapRow(rs);
+                    if (p.isExpired()) {
+                        this.expire(p.getId());
+                        continue;
+                    }
+                    return p;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /** Deactivates all active IP bans for the given IP. Returns how many were removed. */
+    public int unpunishIpBans(String ip, String staff, String reason) {
+        String sql = "UPDATE punishments SET active = 0, removed_by = ?, remove_reason = ? WHERE ip = ? AND active = 1 AND (type = 'IPBAN' OR type = 'TEMPIPBAN')";
+        try (PreparedStatement ps = this.conn().prepareStatement(sql)) {
+            ps.setString(1, staff);
+            ps.setString(2, reason);
+            ps.setString(3, ip);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
     public Punishment getActiveMute(UUID uuid) {
         return this.getActiveByCategory(uuid, false, true);
     }
@@ -185,7 +223,7 @@ public class PunishmentManager {
 
     public List<Punishment> getActiveBans() {
         ArrayList<Punishment> list = new ArrayList<Punishment>();
-        String sql = "SELECT * FROM punishments WHERE active = 1 AND (type = 'BAN' OR type = 'TEMPBAN') ORDER BY created_at DESC";
+        String sql = "SELECT * FROM punishments WHERE active = 1 AND type IN ('BAN', 'TEMPBAN', 'IPBAN', 'TEMPIPBAN') ORDER BY created_at DESC";
         try (PreparedStatement ps = this.conn().prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
