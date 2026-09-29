@@ -32,13 +32,23 @@ public class PlayerConnectionListener implements Listener {
 
         Punishment ban = plugin.getPunishmentManager().getActiveBan(uuid);
 
+        // Explicit IP ban (/ipban, /tempipban) - always checked
         if (ban == null && ip != null) {
+            ban = plugin.getPunishmentManager().getActiveIpBan(ip);
+        }
+
+        // Legacy behaviour: a normal ban also blocks the IP the player had when banned.
+        // Set "ban-blocks-ip: false" in config.yml to make /ban account-only.
+        if (ban == null && ip != null && plugin.getConfig().getBoolean("ban-blocks-ip", true)) {
             ban = plugin.getPunishmentManager().getActiveBanByIp(ip);
         }
 
         if (ban == null) return;
 
-        String path = ban.isPermanent() ? "kick-screen.ban" : "kick-screen.ban";
+        String path = "kick-screen.ban";
+        if (ban.getType().isIpBanType() && plugin.getConfig().isString("kick-screen.ipban")) {
+            path = "kick-screen.ipban";
+        }
         String template = plugin.getConfig().getString(path, "&cYou are banned.");
 
         Map<String, String> placeholders = new HashMap<>();
