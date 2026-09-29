@@ -51,6 +51,18 @@ public class FailBanCommandHandler implements CommandExecutor, TabCompleter {
                 this.handleUnpunishCategory(sender, args, true, false, "unbanned-by-staff", "not-banned");
                 break;
             }
+            case "ipban": {
+                this.handleIpBan(sender, args, false);
+                break;
+            }
+            case "tempipban": {
+                this.handleIpBan(sender, args, true);
+                break;
+            }
+            case "unipban": {
+                this.handleUnIpBan(sender, args);
+                break;
+            }
             case "kick": {
                 this.handleKick(sender, args);
                 break;
@@ -188,6 +200,121 @@ public class FailBanCommandHandler implements CommandExecutor, TabCompleter {
         ph.put("time_left", temp ? TimeUtil.formatDuration(duration) : "permanent");
         this.broadcastNotify(sender, temp ? "tempbanned-by-staff" : "banned-by-staff", ph);
         DiscordWebhook.send(this.plugin, temp ? "Temp Ban" : "Ban", target.name, sender.getName(), reason, temp ? TimeUtil.formatDuration(duration) : "permanent", "15158332");
+    }
+
+    // Placeholder UUID used for IP bans that target a raw IP address (no player attached)
+    private static final UUID IP_ONLY_UUID = new UUID(0L, 0L);
+
+    private boolean looksLikeIp(String s) {
+        return s.matches("^(\\d{1,3}\\.){3}\\d{1,3}$") || (s.contains(":") && s.matches("^[0-9a-fA-F:.]+$"));
+    }
+
+    private void handleIpBan(CommandSender sender, String[] args, boolean temp) {
+        int minArgs = temp ? 3 : 2;
+        if (args.length < minArgs) {
+            this.msg(sender, "invalid-usage", Map.of("usage", temp ? "/tempipban <player|ip> <time> <reason>" : "/ipban <player|ip> <reason>"));
+            return;
+        }
+        long duration = -1L;
+        String reason;
+        if (temp) {
+            duration = TimeUtil.parseDuration(args[1]);
+            if (duration == -2L) {
+                this.msg(sender, "invalid-time", null);
+                return;
+            }
+            reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+        } else {
+            reason = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+        }
+
+        UUID uuid;
+        String name;
+        String ip;
+        if (this.looksLikeIp(args[0])) {
+            uuid = IP_ONLY_UUID;
+            name = args[0];
+            ip = args[0];
+        } else {
+            Target target = this.resolveTarget(sender, args[0]);
+            if (target == null) {
+                return;
+            }
+            ip = target.ip;
+            if (ip == null) {
+                List<String> known = this.plugin.getPlayerDataManager().getKnownIps(target.uuid);
+                ip = known.isEmpty() ? null : known.get(0);
+            }
+            if (ip == null || ip.equals("unknown")) {
+                this.msg(sender, "ipban-no-ip", Map.of("player", target.name));
+                return;
+            }
+            uuid = target.uuid;
+            name = target.name;
+        }
+
+        if (this.plugin.getPunishmentManager().getActiveIpBan(ip) != null) {
+            this.msg(sender, "already-ipbanned", Map.of("player", name));
+            return;
+        }
+
+        boolean permanent = duration == -1L;
+        PunishmentType type = permanent ? PunishmentType.IPBAN : PunishmentType.TEMPIPBAN;
+        Punishment p = this.plugin.getPunishmentManager().addPunishment(uuid, name, type, reason, sender.getName(), ip, duration);
+        if (p == null) {
+            sender.sendMessage(MessageUtil.color("&cFailed to save the IP ban (see console)."));
+            return;
+        }
+        String timeLeft = permanent ? "permanent" : TimeUtil.formatDuration(duration);
+        String shown = uuid.equals(IP_ONLY_UUID) ? ip : name + " | " + ip;
+
+        // Kick every online player currently connected from this IP
+        String screenPath = this.plugin.getConfig().isString("kick-screen.ipban") ? "kick-screen.ipban" : "kick-screen.ban";
+        for (Player online : new ArrayList<>(Bukkit.getOnlinePlayers())) {
+            if (online.getAddress() == null) continue;
+            if (!ip.equals(online.getAddress().getAddress().getHostAddress())) continue;
+            this.kickWithScreen(online, screenPath, reason, sender.getName(), timeLeft);
+        }
+
+        HashMap<String, String> ph = new HashMap<>();
+        ph.put("player", shown);
+        ph.put("staff", sender.getName());
+        ph.put("reason", reason);
+        ph.put("time_left", timeLeft);
+        this.broadcastNotify(sender, permanent ? "ipbanned-by-staff" : "tempipbanned-by-staff", ph);
+        DiscordWebhook.send(this.plugin, permanent ? "IP Ban" : "Temp IP Ban", shown, sender.getName(), reason, timeLeft, "15158332");
+    }
+
+    private void handleUnIpBan(CommandSender sender, String[] args) {
+        if (args.length < 1) {
+            this.msg(sender, "invalid-usage", Map.of("usage", "/unipban <player|ip>"));
+            return;
+        }
+        String reason = "Removed";
+        String display;
+        boolean success;
+        if (this.looksLikeIp(args[0])) {
+            display = args[0];
+            success = this.plugin.getPunishmentManager().unpunishIpBans(args[0], sender.getName(), reason) > 0;
+        } else {
+            Target target = this.resolveTarget(sender, args[0]);
+            if (target == null) {
+                return;
+            }
+            display = target.name;
+            List<Punishment> ipBans = this.plugin.getPunishmentManager().getActivePunishments(target.uuid).stream()
+                    .filter(p -> p.getType().isIpBanType()).collect(Collectors.toList());
+            for (Punishment p : ipBans) {
+                this.plugin.getPunishmentManager().unpunishById(p.getId(), sender.getName(), reason);
+            }
+            success = !ipBans.isEmpty();
+        }
+        if (!success) {
+            this.msg(sender, "not-ipbanned", Map.of("player", display));
+            return;
+        }
+        this.broadcastNotify(sender, "unipbanned-by-staff", Map.of("player", display, "staff", sender.getName()));
+        DiscordWebhook.send(this.plugin, "Unban IP", display, sender.getName(), reason, null, "3066993");
     }
 
     private void handleKick(CommandSender sender, String[] args) {
@@ -718,7 +845,7 @@ public class FailBanCommandHandler implements CommandExecutor, TabCompleter {
         String[] lines;
         sender.sendMessage(MessageUtil.color("&8&m--------------------------------"));
         sender.sendMessage(MessageUtil.color("&c&lFailBan &7- Help"));
-        for (String l : lines = new String[]{"/ban <player> <reason>", "/tempban <player> <time> <reason>", "/unban <player> [reason]", "/kick <player> <reason>", "/mute <player> <reason>", "/tempmute <player> <time> <reason>", "/unmute <player> [reason]", "/warn <player> <reason>", "/tempwarn <player> <time> <reason>", "/unwarn <player> [reason]", "/history <player>", "/check <player>", "/banlist [page]", "/unpunish <id> [reason]", "/change-reason <id> <reason>", "/failcheck <player>", "/failban reload", "/failban help"}) {
+        for (String l : lines = new String[]{"/ban <player> <reason>", "/tempban <player> <time> <reason>", "/unban <player> [reason]", "/ipban <player|ip> <reason>", "/tempipban <player|ip> <time> <reason>", "/unipban <player|ip>", "/kick <player> <reason>", "/mute <player> <reason>", "/tempmute <player> <time> <reason>", "/unmute <player> [reason]", "/warn <player> <reason>", "/tempwarn <player> <time> <reason>", "/unwarn <player> [reason]", "/history <player>", "/check <player>", "/banlist [page]", "/unpunish <id> [reason]", "/change-reason <id> <reason>", "/failcheck <player>", "/failban reload", "/failban help"}) {
             sender.sendMessage(MessageUtil.color("&7- &e" + l));
         }
         sender.sendMessage(MessageUtil.color("&8&m--------------------------------"));
@@ -753,9 +880,16 @@ public class FailBanCommandHandler implements CommandExecutor, TabCompleter {
         sender.sendMessage(MessageUtil.color(MessageUtil.getMessage(this.plugin, key, placeholders)));
     }
 
+    private String displayName(Punishment p) {
+        if (p.getType().isIpBanType() && !p.getUuid().equals(IP_ONLY_UUID) && p.getIp() != null) {
+            return p.getPlayerName() + " | " + p.getIp();
+        }
+        return p.getPlayerName();
+    }
+
     private String formatHistoryLine(Punishment p) {
         String format = this.plugin.getConfig().getString("history-format", "&8#{id} &7[{type}] &e{player} &7- &f{reason}");
-        return format.replace("{id}", String.valueOf(p.getId())).replace("{type}", p.getType().name()).replace("{player}", p.getPlayerName()).replace("{reason}", p.getReason() == null ? "-" : p.getReason()).replace("{staff}", p.getStaff() == null ? "-" : p.getStaff()).replace("{date}", MessageUtil.formatDate(p.getCreatedAt()));
+        return format.replace("{id}", String.valueOf(p.getId())).replace("{type}", p.getType().name()).replace("{player}", this.displayName(p)).replace("{reason}", p.getReason() == null ? "-" : p.getReason()).replace("{staff}", p.getStaff() == null ? "-" : p.getStaff()).replace("{date}", MessageUtil.formatDate(p.getCreatedAt()));
     }
 
     private Target resolveTarget(CommandSender sender, String name) {
@@ -785,7 +919,7 @@ public class FailBanCommandHandler implements CommandExecutor, TabCompleter {
             List<String> names = Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList());
             return this.filter(names, args[0]);
         }
-        if (args.length == 2 && (name.equals("tempban") || name.equals("tempmute") || name.equals("tempwarn"))) {
+        if (args.length == 2 && (name.equals("tempban") || name.equals("tempipban") || name.equals("tempmute") || name.equals("tempwarn"))) {
             return this.filter(List.of("10m", "1h", "1d", "7d", "30d", "perm"), args[1]);
         }
         if (args.length == 2 && (name.equals("ban") || name.equals("punish") || name.equals("kick") || name.equals("warn"))) {
