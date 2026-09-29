@@ -32,6 +32,9 @@ public class FailBan extends JavaPlugin {
         registerCommand("ban", handler);
         registerCommand("tempban", handler);
         registerCommand("unban", handler);
+        registerCommand("ipban", handler);
+        registerCommand("tempipban", handler);
+        registerCommand("unipban", handler);
         registerCommand("kick", handler);
         registerCommand("mute", handler);
         registerCommand("tempmute", handler);
