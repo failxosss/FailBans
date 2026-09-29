@@ -3,6 +3,8 @@ package cz.failban.plugin.model;
 public enum PunishmentType {
     BAN,
     TEMPBAN,
+    IPBAN,
+    TEMPIPBAN,
     KICK,
     MUTE,
     TEMPMUTE,
@@ -10,7 +12,11 @@ public enum PunishmentType {
     TEMPWARN;
 
     public boolean isBanType() {
-        return this == BAN || this == TEMPBAN;
+        return this == BAN || this == TEMPBAN || this == IPBAN || this == TEMPIPBAN;
+    }
+
+    public boolean isIpBanType() {
+        return this == IPBAN || this == TEMPIPBAN;
     }
 
     public boolean isMuteType() {
@@ -22,6 +28,6 @@ public enum PunishmentType {
     }
 
     public boolean isTemporary() {
-        return this == TEMPBAN || this == TEMPMUTE || this == TEMPWARN;
+        return this == TEMPBAN || this == TEMPIPBAN || this == TEMPMUTE || this == TEMPWARN;
     }
 }
