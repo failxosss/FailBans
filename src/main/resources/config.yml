@@ -9,6 +9,10 @@ storage:
 
 prefix: "&8[&cFail&4Ban&8] &r"
 
+# true  = a normal /ban also blocks the IP the player had when banned (current behaviour)
+# false = /ban only blocks the account; only /ipban blocks by IP
+ban-blocks-ip: true
+
 # Placeholders: {player} {reason} {staff} {time_left} {type} {id} {date}
 messages:
   no-permission: "&cYou don't have permission to use this command."
@@ -22,6 +26,12 @@ messages:
   banned-by-staff: "&aPlayer &e{player} &awas banned by &e{staff} &a({reason})"
   tempbanned-by-staff: "&aPlayer &e{player} &awas temporarily banned by &e{staff} &afor {time_left} &a({reason})"
   unbanned-by-staff: "&aPlayer &e{player} &awas unbanned by &e{staff}"
+  ipbanned-by-staff: "&aIP of &e{player} &awas banned by &e{staff} &a({reason})"
+  tempipbanned-by-staff: "&aIP of &e{player} &awas temporarily banned by &e{staff} &afor {time_left} &a({reason})"
+  unipbanned-by-staff: "&aIP ban for &e{player} &awas removed by &e{staff}"
+  already-ipbanned: "&cThe IP of &e{player} &cis already banned."
+  not-ipbanned: "&c&e{player} &cdoes not have an active IP ban."
+  ipban-no-ip: "&cNo known IP address for &e{player}&c. Use /ipban <ip> <reason> instead."
   kicked-by-staff: "&aPlayer &e{player} &awas kicked by &e{staff} &a({reason})"
   muted-by-staff: "&aPlayer &e{player} &awas muted by &e{staff} &a({reason})"
   tempmuted-by-staff: "&aPlayer &e{player} &awas temporarily muted by &e{staff} &afor {time_left} &a({reason})"
@@ -48,6 +58,15 @@ kick-screen:
     &fReason: &f{reason}
     
     &fYou are temporarily banned!
+    &eTime remaining: &e{time_left}
+  ipban: |
+    
+    &c&lYour IP address is banned from this server!
+    
+    &fBanned on: &f{date}
+    &fBanned by: &f{staff}
+    &fReason: &f{reason}
+    
     &eTime remaining: &e{time_left}
   kick: |
     &7&m                                        
@@ -264,4 +283,4 @@ discord:
   # Create a webhook in Discord: Channel Settings -> Integrations -> Webhooks -> New Webhook -> copy URL
   webhook-url: ""
   username: "FailBan"
-  avatar-url: ""
+  avatar-url: "https://i.imgur.com/zrnPmFV.png"
