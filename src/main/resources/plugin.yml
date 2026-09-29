@@ -18,6 +18,18 @@ commands:
     description: Unbans a player
     usage: /unban <player> [reason]
     permission: failban.unban
+  ipban:
+    description: Permanently bans an IP address (by player name or raw IP)
+    usage: /ipban <player|ip> <reason>
+    permission: failban.ipban
+  tempipban:
+    description: Temporarily bans an IP address (by player name or raw IP)
+    usage: /tempipban <player|ip> <time> <reason>
+    permission: failban.tempipban
+  unipban:
+    description: Removes an IP ban (by player name or raw IP)
+    usage: /unipban <player|ip>
+    permission: failban.unipban
   kick:
     description: Kicks a player from the server
     usage: /kick <player> <reason>
@@ -98,6 +110,9 @@ permissions:
       failban.ban: true
       failban.tempban: true
       failban.unban: true
+      failban.ipban: true
+      failban.tempipban: true
+      failban.unipban: true
       failban.kick: true
       failban.mute: true
       failban.tempmute: true
@@ -122,6 +137,9 @@ permissions:
   failban.ban: {default: op}
   failban.tempban: {default: op}
   failban.unban: {default: op}
+  failban.ipban: {default: op}
+  failban.tempipban: {default: op}
+  failban.unipban: {default: op}
   failban.kick: {default: op}
   failban.mute: {default: op}
   failban.tempmute: {default: op}
