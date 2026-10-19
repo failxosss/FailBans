@@ -102,6 +102,14 @@ commands:
     description: Bridge command for anticheats
     usage: /susflag <player> <check> [vl] [anticheat]
     permission: failban.sus.flag
+  anarchyban:
+    description: Sends a player to the anarchy world for a set time
+    usage: /anarchyban <player> <time|perm> [reason]
+    permission: failban.anarchyban
+  anarchyunban:
+    description: Removes an anarchy ban
+    usage: /anarchyunban <player>
+    permission: failban.anarchyunban
 
 permissions:
   failban.*:
@@ -134,6 +142,8 @@ permissions:
       failban.sus.spectate: true
       failban.sus.manage: true
       failban.sus.notify: true
+      failban.anarchyban: true
+      failban.anarchyunban: true
   failban.ban: {default: op}
   failban.tempban: {default: op}
   failban.unban: {default: op}
@@ -164,3 +174,5 @@ permissions:
   failban.sus.notify: {default: op}
   failban.sus.seevanish: {default: op}
   failban.sus.bypass: {default: false}
+  failban.anarchyban: {default: op}
+  failban.anarchyunban: {default: op}
