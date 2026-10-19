@@ -13,6 +13,39 @@ prefix: "&8[&cFail&4Ban&8] &r"
 # false = /ban only blocks the account; only /ipban blocks by IP
 ban-blocks-ip: true
 
+# =========================================
+#        Anarchy ban (/anarchyban)
+# =========================================
+anarchy-ban:
+  # Target world (anarchy_nether, anarchy_the_end... are allowed too, they start with this name)
+  world: anarchy
+  # true = a player with /anarchyban cannot write in chat
+  block-chat: false
+  # Optional exact spawn point (if missing, the world spawn is used)
+  # spawn:
+  #   x: 0.5
+  #   y: 100
+  #   z: 0.5
+  #   yaw: 0
+  #   pitch: 0
+  # Commands a banned player cannot use
+  blocked-commands:
+    - lobby
+    - hub
+    - spawn
+    - server
+    - l
+    - warp
+    - home
+    - tp
+    - tpa
+    - back
+  # Placeholders: {reason} {staff} {time_left}
+  messages:
+    moved: "&cYou have an anarchy ban! You were moved to the anarchy world. Reason: &e{reason} &7(time left: {time_left})"
+    blocked: "&cYou have an anarchy ban, so you cannot leave this world! Reason: &e{reason} &7(time left: {time_left})"
+    chat-blocked: "&cYou have an anarchy ban, so you cannot write in chat! Reason: &e{reason} &7(time left: {time_left})"
+
 # Placeholders: {player} {reason} {staff} {time_left} {type} {id} {date}
 messages:
   no-permission: "&cYou don't have permission to use this command."
@@ -281,6 +314,6 @@ quick-reasons:
 discord:
   enabled: false
   # Create a webhook in Discord: Channel Settings -> Integrations -> Webhooks -> New Webhook -> copy URL
-  webhook-url: ""
+  webhook-url: "h"
   username: "FailBan"
   avatar-url: "https://i.imgur.com/zrnPmFV.png"
