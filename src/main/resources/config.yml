@@ -46,6 +46,22 @@ anarchy-ban:
     blocked: "&cYou have an anarchy ban, so you cannot leave this world! Reason: &e{reason} &7(time left: {time_left})"
     chat-blocked: "&cYou have an anarchy ban, so you cannot write in chat! Reason: &e{reason} &7(time left: {time_left})"
 
+
+# =========================================
+#   Voice mute (together with /mute, /tempmute)
+# =========================================
+voice-mute:
+  enabled: true
+  # How often (in seconds) mutes are re-checked, besides the instant check after /mute etc.
+  check-interval-seconds: 10
+  # Permissions set to false via LuckPerms while the player is muted
+  # (Simple Voice Chat: voicechat.speak = can talk, voicechat.listen = can hear)
+  nodes:
+    - voicechat.speak
+    - voicechat.listen
+
+
+
 # Placeholders: {player} {reason} {staff} {time_left} {type} {id} {date}
 messages:
   no-permission: "&cYou don't have permission to use this command."
