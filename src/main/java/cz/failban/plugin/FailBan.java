@@ -10,6 +10,7 @@ import cz.failban.plugin.listeners.PlayerConnectionListener;
 import cz.failban.plugin.manager.PlayerDataManager;
 import cz.failban.plugin.manager.PunishmentManager;
 import cz.failban.plugin.sus.SusModule; // <-- NOVÉ
+import cz.failban.plugin.voice.VoiceMuteSync;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -21,6 +22,7 @@ public class FailBan extends JavaPlugin {
     private DatabaseManager databaseManager;
     private PunishmentManager punishmentManager;
     private PlayerDataManager playerDataManager;
+    private VoiceMuteSync voiceMuteSync;
 
     @Override
     public void onEnable() {
@@ -58,12 +60,17 @@ public class FailBan extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerConnectionListener(this), this);
         getServer().getPluginManager().registerEvents(new ChatListener(this), this);
 
-        // <-- NOVÉ: Anarchy ban (/anarchyban, /anarchyunban)
+        // Anarchy ban (/anarchyban, /anarchyunban)
         AnarchyBanManager anarchyManager = new AnarchyBanManager(this);
         getServer().getPluginManager().registerEvents(new AnarchyBanListener(this, anarchyManager), this);
         AnarchyBanCommand anarchyCmd = new AnarchyBanCommand(this, anarchyManager);
         registerCommand("anarchyban", anarchyCmd, anarchyCmd);
         registerCommand("anarchyunban", anarchyCmd, anarchyCmd);
+
+        // Voice mute (mute in voice chat together with /mute and /tempmute)
+        this.voiceMuteSync = new VoiceMuteSync(this);
+        getServer().getPluginManager().registerEvents(this.voiceMuteSync, this);
+        this.voiceMuteSync.start();
 
         getLogger().info("FailBan has been successfully loaded! (version " + getDescription().getVersion() + ")");
 
@@ -73,6 +80,8 @@ public class FailBan extends JavaPlugin {
     @Override
     public void onDisable() {
         SusModule.disable(); // <-- NOVÉ
+
+        if (voiceMuteSync != null) voiceMuteSync.stop();
 
         if (databaseManager != null) databaseManager.close();
         getLogger().info("FailBan has been disabled.");
