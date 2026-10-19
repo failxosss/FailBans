@@ -1,5 +1,8 @@
 package cz.failban.plugin;
 
+import cz.failban.plugin.anarchy.AnarchyBanCommand;
+import cz.failban.plugin.anarchy.AnarchyBanListener;
+import cz.failban.plugin.anarchy.AnarchyBanManager;
 import cz.failban.plugin.commands.FailBanCommandHandler;
 import cz.failban.plugin.database.DatabaseManager;
 import cz.failban.plugin.listeners.ChatListener;
@@ -7,6 +10,8 @@ import cz.failban.plugin.listeners.PlayerConnectionListener;
 import cz.failban.plugin.manager.PlayerDataManager;
 import cz.failban.plugin.manager.PunishmentManager;
 import cz.failban.plugin.sus.SusModule; // <-- NOVÉ
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class FailBan extends JavaPlugin {
@@ -53,6 +58,13 @@ public class FailBan extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerConnectionListener(this), this);
         getServer().getPluginManager().registerEvents(new ChatListener(this), this);
 
+        // <-- NOVÉ: Anarchy ban (/anarchyban, /anarchyunban)
+        AnarchyBanManager anarchyManager = new AnarchyBanManager(this);
+        getServer().getPluginManager().registerEvents(new AnarchyBanListener(this, anarchyManager), this);
+        AnarchyBanCommand anarchyCmd = new AnarchyBanCommand(this, anarchyManager);
+        registerCommand("anarchyban", anarchyCmd, anarchyCmd);
+        registerCommand("anarchyunban", anarchyCmd, anarchyCmd);
+
         getLogger().info("FailBan has been successfully loaded! (version " + getDescription().getVersion() + ")");
 
         SusModule.enable(this); // <-- NOVÉ
@@ -67,9 +79,13 @@ public class FailBan extends JavaPlugin {
     }
 
     private void registerCommand(String name, FailBanCommandHandler handler) {
+        registerCommand(name, handler, handler);
+    }
+
+    private void registerCommand(String name, CommandExecutor executor, TabCompleter completer) {
         if (getCommand(name) != null) {
-            getCommand(name).setExecutor(handler);
-            getCommand(name).setTabCompleter(handler);
+            getCommand(name).setExecutor(executor);
+            getCommand(name).setTabCompleter(completer);
         } else {
             getLogger().warning("Command '" + name + "' was not found in plugin.yml!");
         }
